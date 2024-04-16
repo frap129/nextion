@@ -367,7 +367,7 @@ class Nextion:
         except CommandFailed as e:
             logger.warning("Additional sleep configuration failed: %s" % str(e))
 
-        self.write_command("whmi-wri %d,%d,0" % (file_size, upload_baud))
+        self.write_command("whmi-wris %d,%d,0" % (file_size, upload_baud))
         logger.info("Reconnecting at new baud rate: %d" % (upload_baud))
         await self._connection.close()
         _, self._connection = await serial_asyncio.create_serial_connection(
@@ -392,7 +392,14 @@ class Nextion:
 
             timeout = len(buf) * 12 / self._baudrate + 1
             res = await self.read_packet(timeout=timeout)
-            if res != b"\x05":
+            if res == b"\x08":
+                offset =  await self.read_packet(timeout=timeout)
+                if len(offset) != 4:
+                    raise Exception("Incomplete offset for skip command (0x08).")
+                offset = struct.unpack("<I", offset)[0]
+                if (offset):
+                    file.seek(offset)
+            elif res != b"\x05":
                 raise IOError(
                     "Wrong response while uploading chunk: %s" % binascii.hexlify(res)
                 )
