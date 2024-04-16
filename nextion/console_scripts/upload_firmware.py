@@ -20,13 +20,13 @@ def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("device", help="device serial port")
     parser.add_argument(
-        "-b", "--baud", type=int, default=None, help="baud rate", choices=BAUDRATES
+        "-b", "--baud", type=int, default=115200, help="baud rate", choices=BAUDRATES
     )
     parser.add_argument(
         "-ub",
         "--upload_baud",
         type=int,
-        default=115200,
+        default=921600,
         help="upload baud rate",
         choices=BAUDRATES,
     )
