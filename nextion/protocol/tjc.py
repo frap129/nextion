@@ -1,17 +1,8 @@
 # Copyright (c) 2024 OpenNeptune3D
 
-import struct
-from collections import namedtuple
 from enum import IntEnum
 
-from ..client import Nextion
-from ..exceptions import CommandTimeout, ConnectionFailed
 from .nextion import NextionProtocol
-
-TJCTouchDataPayload = namedtuple("Touch", "page_id component_id")
-TJCStringInputPayload = namedtuple("String", "page_id component_id string")
-TJCNumericInputPayload = namedtuple("Numeric", "page_id component_id value")
-TJCTouchCoordinatePayload = namedtuple("TouchCoordinate", "x y touch_event")
 
 
 class EventType(IntEnum):
@@ -125,61 +116,3 @@ class TJCProtocol(NextionProtocol):
 
         self.buffer = leftover
         return message, False
-
-
-class TJCClient(Nextion):
-    is_reconnecting = False
-
-    def _make_protocol(self):
-        return TJCProtocol(event_message_handler=self.event_message_handler)
-
-    def event_message_handler(self, message):
-        typ = message[0]
-        if typ == EventType.TOUCH_COORDINATE:
-            self._schedule_event_message_handler(
-                EventType(typ),
-                TJCTouchCoordinatePayload._make(struct.unpack(">HHB", message[1:])),
-            )
-            return
-        elif typ == EventType.TOUCH:  # Touch event
-            self._schedule_event_message_handler(
-                EventType(typ),
-                TJCTouchDataPayload._make(struct.unpack("BB", message[1:])),
-            )
-            return
-        elif typ == EventType.NUMERIC_INPUT:
-            self._schedule_event_message_handler(
-                EventType(typ),
-                TJCNumericInputPayload._make(struct.unpack("BBH", message[1:])),
-            )
-            return
-        elif typ == EventType.SLIDER_INPUT:
-            self._schedule_event_message_handler(
-                EventType(typ),
-                TJCNumericInputPayload._make(struct.unpack("BBH", message[1:])),
-            )
-            return
-        super().event_message_handler(message)
-
-    async def reconnect(self):
-        await self._connection.close()
-        self.is_reconnecting = True
-        await self.connect()
-
-    async def connect(self) -> None:
-        try:
-            await self._try_connect_on_different_baudrates()
-
-            try:
-                await self._command("bkcmd=3", attempts=1)
-            except CommandTimeout:
-                pass  # it is fine
-
-            await self._update_sleep_status()
-            if self.is_reconnecting:
-                self.is_reconnecting = False
-                self._schedule_event_message_handler(EventType.RECONNECTED, None)
-        except ConnectionFailed:
-            raise
-        except:
-            raise
