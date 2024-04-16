@@ -1,4 +1,4 @@
-from .client import EventType, Nextion
+from .client import TJC, EventType, Nextion
 from .exceptions import CommandFailed, CommandTimeout, ConnectionFailed
 
 __all__ = [

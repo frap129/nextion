@@ -12,10 +12,13 @@ class EventType(IntEnum):
     TOUCH = 0x65  # Touch event
     TOUCH_COORDINATE = 0x67  # Touch coordinate
     TOUCH_IN_SLEEP = 0x68  # Touch event in sleep mode
+    SLIDER_INPUT = 0x69
+    NUMERIC_INPUT = 0x72  # Numeric input
     AUTO_SLEEP = 0x86  # Device automatically enters into sleep mode
     AUTO_WAKE = 0x87  # Device automatically wake up
     STARTUP = 0x88  # System successful start up
     SD_CARD_UPGRADE = 0x89  # Start SD card upgrade
+    RECONNECTED = 0x666  # Device reconnected
 
 
 class ResponseType(IntEnum):
